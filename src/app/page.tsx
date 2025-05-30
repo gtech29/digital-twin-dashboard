@@ -13,6 +13,12 @@ type FullData = {
   sensor: DeviceData;
 };
 
+type Anomaly = {
+  index: number;
+  value: number;
+  status: string;
+};
+
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
@@ -29,9 +35,10 @@ const containerVariants = {
 
 export default function Home() {
   const [data, setData] = useState<FullData | null>(null);
+  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDeviceData = async () => {
       try {
         const res = await fetch('http://localhost:5000/api/device_data');
         const json = await res.json();
@@ -41,8 +48,24 @@ export default function Home() {
       }
     };
 
-    fetchData();
-    const interval = setInterval(fetchData, 2000);
+    const fetchAnomalies = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/predictions');
+        const json = await res.json();
+        if (json.anomalies) setAnomalies(json.anomalies);
+      } catch (err) {
+        console.error('Failed to fetch anomaly predictions:', err);
+      }
+    };
+
+    fetchDeviceData();
+    fetchAnomalies();
+
+    const interval = setInterval(() => {
+      fetchDeviceData();
+      fetchAnomalies();
+    }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -56,7 +79,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-blue-50 px-6 py-10">
-      <h1 className="text-3xl font-bold text-center text-blue-600 mb-10 tracking-wide uppercase">
+      <h1 className="text-4xl font-bold text-center text-blue-700 mb-12 tracking-wide uppercase drop-shadow-md">
         Digital Twin Dashboard
       </h1>
 
@@ -70,6 +93,32 @@ export default function Home() {
         <Card title="DNP3 Outstation" data={data.dnp3} />
         <Card title="Sensor" data={data.sensor} />
       </motion.div>
+
+      <div className="mt-16 max-w-3xl mx-auto bg-white rounded-xl shadow p-6">
+        <h2 className="text-2xl font-bold text-red-600 mb-4 text-center">
+          Anomaly Detection (PLC Temperature)
+        </h2>
+        {anomalies.length === 0 ? (
+          <p className="text-gray-500 text-center">No anomalies detected.</p>
+        ) : (
+          <ul className="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+            {anomalies.map((item) => (
+              <li
+                key={item.index}
+                className={`flex justify-between px-4 py-2 ${
+                  item.status === 'anomaly'
+                    ? 'bg-red-50 text-red-600 font-semibold'
+                    : 'text-gray-700'
+                }`}
+              >
+                <span># {item.index + 1}</span>
+                <span>{item.value} °C</span>
+                <span>{item.status}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </main>
   );
 }
@@ -84,8 +133,8 @@ function Card({ title, data }: { title: string; data: DeviceData }) {
       <h2 className="text-lg font-bold text-center text-blue-600 uppercase mb-4 tracking-wide">{title}</h2>
       <div className="space-y-2">
         {Object.entries(data).map(([label, value]) => (
-          <div key={label} className="flex justify-between text-gray-800">
-            <span className="font-medium capitalize">{label.replace(/_/g, ' ')}:</span>
+          <div key={label} className="flex justify-between text-gray-800 bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 transition">
+            <span className="capitalize">{label.replace(/_/g, ' ')}:</span>
             <span className="font-semibold">{value ?? '--'}</span>
           </div>
         ))}
