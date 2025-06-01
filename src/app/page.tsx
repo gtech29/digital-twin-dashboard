@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import AgentChatBox from './AgentChatBox';
 
 type DeviceData = {
   [key: string]: string | null;
@@ -32,6 +33,29 @@ const containerVariants = {
     },
   },
 };
+
+function Card({ title, data }: { title: string; data: DeviceData }) {
+  return (
+    <motion.div
+      className="bg-white rounded-2xl shadow-lg px-8 py-6 w-80 transform transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-200"
+      variants={cardVariants}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
+      <h2 className="text-lg font-bold text-center text-blue-600 uppercase mb-4 tracking-wide">{title}</h2>
+      <div className="space-y-2">
+        {Object.entries(data).map(([label, value]) => (
+          <div
+            key={label}
+            className="flex justify-between text-gray-800 bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 transition"
+          >
+            <span className="capitalize">{label.replace(/_/g, ' ')}:</span>
+            <span className="font-semibold">{value ?? '--'}</span>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
 
 export default function Home() {
   const [data, setData] = useState<FullData | null>(null);
@@ -119,26 +143,10 @@ export default function Home() {
           </ul>
         )}
       </div>
-    </main>
-  );
-}
 
-function Card({ title, data }: { title: string; data: DeviceData }) {
-  return (
-    <motion.div
-      className="bg-white rounded-2xl shadow-lg px-8 py-6 w-80 transform transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-blue-200"
-      variants={cardVariants}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
-    >
-      <h2 className="text-lg font-bold text-center text-blue-600 uppercase mb-4 tracking-wide">{title}</h2>
-      <div className="space-y-2">
-        {Object.entries(data).map(([label, value]) => (
-          <div key={label} className="flex justify-between text-gray-800 bg-gray-100 px-3 py-1 rounded hover:bg-gray-200 transition">
-            <span className="capitalize">{label.replace(/_/g, ' ')}:</span>
-            <span className="font-semibold">{value ?? '--'}</span>
-          </div>
-        ))}
+      <div className="mt-10">
+        <AgentChatBox />
       </div>
-    </motion.div>
+    </main>
   );
 }
