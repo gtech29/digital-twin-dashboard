@@ -14,7 +14,7 @@ export default function AgentChatBox() {
     setResponse("");
 
     try {
-      const res = await fetch("http://llm-agent:8000/ask", {
+      const res = await fetch('http://localhost:5050/api/agent', {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: input }),
