@@ -23,6 +23,8 @@ type Anomaly = {
   status: string;
 };
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
+
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 },
@@ -55,54 +57,75 @@ function Card({ title, data }: { title: string; data?: DeviceData | null }) {
 export default function Home() {
   const [data, setData] = useState<FullData | null>(null);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
-  const [historicalData, setHistoricalData] = useState<{ time_iso: string; value: number }[]>([]);
 
-  const fetchHistoricalData = async () => {
+  const fetchDeviceData = async () => {
+  try {
+    // Simulate fake device data
+    const fakeData = {
+      plc: {
+        temperature: (20 + Math.random() * 5).toFixed(2),
+        setpoint: "22.5",
+        humidity: (40 + Math.random() * 10).toFixed(2),
+        fan_status: "on"
+      },
+      dnp3: {
+        temperature: (19 + Math.random() * 6).toFixed(2),
+        valve_position: "open",
+        alarm: "normal"
+      },
+      sensor: {
+        temperature: (21 + Math.random() * 3).toFixed(2),
+        humidity: (45 + Math.random() * 5).toFixed(2)
+      },
+      jensys: {
+        temperature: (23 + Math.random() * 2).toFixed(2),
+        humidity: (40 + Math.random() * 10).toFixed(2),
+        ip: "192.168.1.50",
+        model: "JENEsys 8000",
+        firmware: "v3.1.2"
+      },
+      trane: {
+        ip: "192.168.1.60",
+        model: "Tracer SC+",
+        firmware: "v4.5.6",
+        temperature: (24 + Math.random() * 1).toFixed(2)
+      }
+    };
+
+    setData(fakeData);
+  } catch (err) {
+    console.error('Failed to simulate device data:', err);
+  }
+};
+
+
+  const fetchAnomalies = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/historical_data?device=plc&param=temperature');
-      const json = await res.json();
-      setHistoricalData(json);
+      const fakeAnomalies: Anomaly[] = Array.from({ length: 3 }).map((_, i) => ({
+        id: `${Date.now()}-${i}`,
+        index: Math.floor(Math.random() * 50),
+        value: parseFloat((60 + Math.random() * 40).toFixed(1)),
+        status: ['Spike', 'Drop', 'Drift'][Math.floor(Math.random() * 3)],
+      }));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      setAnomalies(fakeAnomalies);
     } catch (err) {
-      console.error('Failed to fetch historical data:', err);
+      console.error('Failed to fetch anomaly predictions:', err);
     }
   };
 
   useEffect(() => {
-    const fetchDeviceData = async () => {
-      try {
-        const res = await fetch('http://localhost:5000/api/device_data');
-        const json = await res.json();
-        setData(json);
-      } catch (err) {
-        console.error('Failed to fetch device data:', err);
-      }
-    };
+  fetchDeviceData();
+  fetchAnomalies();
 
-    const fetchAnomalies = async () => {
-      try {
-        const fakeAnomalies: Anomaly[] = Array.from({ length: 3 }).map((_, i) => ({
-          id: `${Date.now()}-${i}`, // ✅ Unique key
-          index: Math.floor(Math.random() * 50),
-          value: parseFloat((60 + Math.random() * 40).toFixed(1)),
-          status: ['Spike', 'Drop', 'Drift'][Math.floor(Math.random() * 3)],
-        }));
-        await new Promise(resolve => setTimeout(resolve, 500));
-        setAnomalies(fakeAnomalies);
-      } catch (err) {
-        console.error('Failed to fetch anomaly predictions:', err);
-      }
-    };
-
+  const interval = setInterval(() => {
     fetchDeviceData();
     fetchAnomalies();
+  }, 5000);
 
-    const interval = setInterval(() => {
-      fetchDeviceData();
-      fetchAnomalies();
-    }, 5000);
+  return () => clearInterval(interval);
+}, []);
 
-    return () => clearInterval(interval);
-  }, []);
 
   if (!data) {
     return (
@@ -127,7 +150,6 @@ export default function Home() {
       </header>
 
       <div className="mt-10 grid grid-cols-1 lg:grid-cols-[350px_1fr] gap-8 min-h-[600px] max-w-full px-6">
-        {/* Anomaly Sidebar */}
         <div className="bg-white p-6 h-[100vh] sticky top-0 overflow-auto lg:-mx-6">
           <h2 className="text-2xl font-bold text-red-600 mb-4 text-center">Anomaly Detection (PLC Temperature)</h2>
           {anomalies.length === 0 ? (
@@ -152,7 +174,6 @@ export default function Home() {
           )}
         </div>
 
-        {/* Right Content: Cards + Graph */}
         <div className="flex flex-col gap-2 overflow-hidden">
           <div className="px-6">
             <div className="flex overflow-x-auto gap-x-6 pb-2 w-full">
@@ -163,11 +184,9 @@ export default function Home() {
               <Card title="Trane" data={data.trane} />
             </div>
           </div>
-          <div className="mt-8 px-6">
-            <div className="p-4 rounded-xl w-full">
+          <div className="p-4 rounded-xl w-full">
               <HistoricalGraph />
             </div>
-          </div>
         </div>
       </div>
     </main>
