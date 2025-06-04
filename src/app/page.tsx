@@ -23,7 +23,6 @@ type Anomaly = {
   status: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5000';
 
 const cardVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -60,41 +59,13 @@ export default function Home() {
 
   const fetchDeviceData = async () => {
   try {
-    // Simulate fake device data
-    const fakeData = {
-      plc: {
-        temperature: (20 + Math.random() * 5).toFixed(2),
-        setpoint: "22.5",
-        humidity: (40 + Math.random() * 10).toFixed(2),
-        fan_status: "on"
-      },
-      dnp3: {
-        temperature: (19 + Math.random() * 6).toFixed(2),
-        valve_position: "open",
-        alarm: "normal"
-      },
-      sensor: {
-        temperature: (21 + Math.random() * 3).toFixed(2),
-        humidity: (45 + Math.random() * 5).toFixed(2)
-      },
-      jensys: {
-        temperature: (23 + Math.random() * 2).toFixed(2),
-        humidity: (40 + Math.random() * 10).toFixed(2),
-        ip: "192.168.1.50",
-        model: "JENEsys 8000",
-        firmware: "v3.1.2"
-      },
-      trane: {
-        ip: "192.168.1.60",
-        model: "Tracer SC+",
-        firmware: "v4.5.6",
-        temperature: (24 + Math.random() * 1).toFixed(2)
-      }
-    };
+    const res = await fetch("http://localhost:5000/api/device_data");
+    if (!res.ok) throw new Error("Network response was not ok");
 
-    setData(fakeData);
+    const realData = await res.json();
+    setData(realData);
   } catch (err) {
-    console.error('Failed to simulate device data:', err);
+    console.error("Failed to fetch device data:", err);
   }
 };
 
