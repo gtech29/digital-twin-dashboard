@@ -1,0 +1,39 @@
+# --- Node.js / Next.js ---
+node_modules/
+.next/
+out/
+dist/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# --- Environment Variables ---
+.env*
+!.env.example
+
+# --- Python / Flask ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+env/
+venv/
+.venv/
+
+# --- Docker ---
+*.log
+*.pid
+docker-compose.override.yml
+
+# --- VS Code ---
+.vscode/
+
+# --- macOS / Windows ---
+.DS_Store
+Thumbs.db
+
+# --- TypeScript ---
+*.tsbuildinfo
+
+# --- General ---
+*.swp
+*~
