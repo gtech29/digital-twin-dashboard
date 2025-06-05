@@ -58,16 +58,19 @@ export default function Home() {
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
 
   const fetchDeviceData = async () => {
-  try {
-    const res = await fetch("http://localhost:5000/api/device_data");
-    if (!res.ok) throw new Error("Network response was not ok");
+    try {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE;
 
-    const realData = await res.json();
-    setData(realData);
-  } catch (err) {
-    console.error("Failed to fetch device data:", err);
-  }
-};
+      const res = await fetch(`${apiBase}/api/device_data`);
+
+      if (!res.ok) throw new Error("Network response was not ok");
+
+      const realData = await res.json();
+      setData(realData);
+    } catch (err) {
+      console.error("Failed to fetch device data:", err);
+    }
+  };
 
 
   const fetchAnomalies = async () => {
@@ -86,16 +89,16 @@ export default function Home() {
   };
 
   useEffect(() => {
-  fetchDeviceData();
-  fetchAnomalies();
-
-  const interval = setInterval(() => {
     fetchDeviceData();
     fetchAnomalies();
-  }, 5000);
 
-  return () => clearInterval(interval);
-}, []);
+    const interval = setInterval(() => {
+      fetchDeviceData();
+      fetchAnomalies();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
 
   if (!data) {
@@ -130,11 +133,10 @@ export default function Home() {
               {anomalies.map((item) => (
                 <li
                   key={item.id}
-                  className={`flex justify-between px-4 py-2 ${
-                    ['Spike', 'Drop', 'Drift'].includes(item.status)
+                  className={`flex justify-between px-4 py-2 ${['Spike', 'Drop', 'Drift'].includes(item.status)
                       ? 'bg-red-50 text-red-600 font-semibold'
                       : 'text-gray-700'
-                  }`}
+                    }`}
                 >
                   <span># {item.index + 1}</span>
                   <span>{item.value} °C</span>
@@ -156,8 +158,8 @@ export default function Home() {
             </div>
           </div>
           <div className="p-4 rounded-xl w-full">
-              <HistoricalGraph />
-            </div>
+            <HistoricalGraph />
+          </div>
         </div>
       </div>
     </main>
